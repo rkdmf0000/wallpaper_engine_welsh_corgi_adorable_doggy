@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko" id="tag_html">
+    <!--
+        Version         : 0.0.1.0
+        Programming by  : https://github.com/rkdmf0000
+        Date            : 2021.09.02
+        Hello there?
+    -->
+    <head>
+        <title>Cogi</title>
+        <meta charset="utf-8" />
+    </head>
+    <body id="tag_body">
+
+        <style type="text/css">
+            html, body {background-color:#000000;}
+            #image_view {position: fixed;background-color:#ffffff;background-color:#000000;/*opacity:0;*/}
+        </style>
+
+        <!--before script-->
+        <script type="text/javascript">
+        /*notting!*/
+        </script>
+        
+        <!--draws-->
+        <canvas id="image_view" width="300" height="240"></canvas>
+
+        <!--after script-->
+        <script type="text/javascript">
+            ;(function(){
+
+                var globalvariables = {
+                    imageLoadCnt : 0, // will matched options.maxinumFrame when it correctly works!
+                    frameIdx : 0,
+                    backgroundColorR : "00",
+                    backgroundColorG : "00",
+                    backgroundColorB : "00"
+                }
+
+                var options = {
+                    extention : ".png",
+                    maximumFrame : 23,          //image frame length
+                    msWaiterWaits : 1000,       //image loadout time waits
+                    cdWaiterMaxinumTries : 10,  //tries image load in that count 
+                    msLatencyPerScene : 100     //frame delay
+                }
+
+                var status = {
+                    isDoneOfAllImageLoad : false, //is this images load are over done?
+                    isDoneOfFirstRunBuffering : false
+                };
+
+                
+                function backgroundChnageEvent () {
+                    var html = document.getElementById("tag_html");
+                    html.style.backgroundColor = "rgb("+globalvariables.backgroundColorR+","+globalvariables.backgroundColorG+","+globalvariables.backgroundColorB+")";
+                    console.log("#"+globalvariables.backgroundColorR + globalvariables.backgroundColorG + globalvariables.backgroundColorB);
+                };
+                if (document.addEventListener) { 
+                    document.addEventListener("DOMContentLoaded", function () {
+                        document.removeEventListener("DOMContentLoaded", arguments.callee, false); 
+                        backgroundChnageEvent(); 
+                    }, false); 
+                };
+
+
+
+                window.wallpaperPropertyListener = {
+                    applyUserProperties: function(properties) {
+                        console.log("On Loads@@@@@@@@@@@@@@@@@@@@@@@");
+                        if (properties.custombackgroundcolor) {
+                            try {
+                                var c = properties.custombackgroundcolor.value.split(' ').map(function(c) {
+                                    return Math.ceil(c * 255)
+                                });
+                                var apad = "00";
+                                var colorArr = c.toString().split(',');
+                                var bfR = colorArr[0].toString();
+                                var bfG= colorArr[1].toString();
+                                var bfB = colorArr[2].toString();
+                                var R = apad.substring(0, apad.length - bfR.length) + bfR;
+                                var G = apad.substring(0, apad.length - bfG.length) + bfG;
+                                var B = apad.substring(0, apad.length - bfB.length) + bfB;
+                                console.log(R);
+                                console.log(G);
+                                console.log(B);
+                                globalvariables.backgroundColorR = R;
+                                globalvariables.backgroundColorG = G;
+                                globalvariables.backgroundColorB = B;
+                                backgroundChnageEvent();
+                            } catch(e) {
+                                console.log("ERROR : " + e);
+                            }
+
+                        }
+                        
+                    }
+                };
+
+
+                function __a(view) {
+                    var w = window.outerWidth;
+                    var h = window.outerHeight;
+                    var tw = view.width;
+                    var th = view.height;
+                    var rw = (w*0.5) - (tw*0.5);
+                    var rh = (h*0.5) - (th*0.5);
+                    view.style.left = rw + "px";
+                    view.style.top = rh + "px";
+                    console.log("w : "  + w + " / " + "h : " + h + " / " + "tw : "  + tw + " / " + "th : " + th + " / " + "rw : " + rw + " / " + "rh : " + rh);
+                };
+                
+                function __f(arr, ctx) {
+                    
+                    var i = 0;
+                    var bpad = "00";
+                    
+                    //All loads on the MEMORY in one time and then wait process
+                    for(i = 0; i <= options.maximumFrame; ++i){ 
+                        var imageApi = new Image();
+                        var bstr = i.toString();
+                        var bres = bpad.substring(0, bpad.length - bstr.length) + bstr;
+
+                        console.log("Load it of "+ bres + " frame");
+
+                        imageApi.addEventListener("load", function(){
+
+                            console.log("When it loaded of " + bres + " buff");
+
+                            ++globalvariables.imageLoadCnt;
+
+                            if (globalvariables.imageLoadCnt == options.maximumFrame) {
+                                status.isDoneOfAllImageLoad = true;
+                                console.log("Image buffers are all loaded");
+                            };
+
+                        }, false);
+
+                        imageApi.src = "./cogi_anim_frame/"+ bres +options.extention;
+
+                        arr.push(imageApi);
+                    }
+                    return arr;
+                
+                }
+
+                ;(function(theView, fnGetArrimageLoadOut, fnDoAlignmentTheView){
+
+
+                    //------------------CANVAS VIEW ELEMENT ALIGNMENT
+                    fnDoAlignmentTheView(theView);
+                    window.addEventListener("resize", function() {
+                        fnDoAlignmentTheView(theView);
+                    }, true);
+
+
+
+                    //------------------CANVAS DRAWS
+                    var ctx = theView.getContext("2d");
+
+                    theView.offscreenCanvas = document.createElement('canvas');
+                    theView.offscreenCanvas.width = theView.width;
+                    theView.offscreenCanvas.height = theView.height;
+                    theView.offscreenCanvasCtx = theView.offscreenCanvas.getContext("2d");
+
+                    var imageArr = [];
+
+                    fnGetArrimageLoadOut(imageArr, ctx);
+
+                    function __f_waitersJob() {
+                        if (status.isDoneOfAllImageLoad) {
+                            clearInterval(waiter);
+                            console.log("Now waiter works!!!");
+                        
+                            //drawing
+                            setInterval(function(){
+
+                                theView.offscreenCanvasCtx.fillStyle = "rgb("+parseInt(globalvariables.backgroundColorR)+","+parseInt(globalvariables.backgroundColorG)+","+parseInt(globalvariables.backgroundColorB)+")";
+                                theView.offscreenCanvasCtx.clearRect(0, 0, theView.width, theView.height);
+                                theView.offscreenCanvasCtx.fillRect(0, 0, theView.width, theView.height);
+                                theView.offscreenCanvasCtx.drawImage(imageArr[globalvariables.frameIdx], 0, 0, theView.width, theView.height);
+                                
+                                if (status.isDoneOfFirstRunBuffering) {
+                                    console.log("drawing...");
+                                    ctx.drawImage(theView.offscreenCanvas, 0, 0);
+                                } else {
+                                    console.log("loading... ("+(globalvariables.frameIdx / options.maximumFrame * 100).toFixed(1)+"%)");
+                                    ctx.fillStyle = "rgb("+parseInt(globalvariables.backgroundColorR)+","+parseInt(globalvariables.backgroundColorG)+","+parseInt(globalvariables.backgroundColorB)+")";
+                                    ctx.clearRect(0, 0, theView.width, theView.height);
+                                    ctx.fillRect(0, 0, theView.width, theView.height);
+                                };
+                                
+
+                                console.log("rgb("+parseInt(globalvariables.backgroundColorR)+","+parseInt(globalvariables.backgroundColorG)+","+parseInt(globalvariables.backgroundColorB)+")");
+
+                                if (globalvariables.frameIdx == options.maximumFrame) {
+                                    status.isDoneOfFirstRunBuffering = true;
+                                    globalvariables.frameIdx = 0;
+                                    //theView.style.opacity = 1;
+                                };
+                                    
+                                ++globalvariables.frameIdx;
+                            }, options.msLatencyPerScene);
+
+                        } else {
+                            console.log("waiter waits...");
+                        };
+                        
+                    };
+
+                    var waiter = setInterval(function(){
+                        __f_waitersJob();
+                    }, options.msWaiterWaits);
+
+                })(document.getElementById("image_view"), __f, __a);
+
+                
+            })();
+
+        </script>
+    </body>
+
+</html>

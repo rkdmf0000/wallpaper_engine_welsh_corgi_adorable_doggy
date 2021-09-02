@@ -1,0 +1,50 @@
+{
+	"contentrating" : "Everyone",
+	"description" : "Draw by : https://twitter.com/White_Jms\n\nbrought this puppy to life : ME\n\na little corgi\n\n\n\nNotice: It takes about 10 seconds to load because it animates images with a size of 15000x10000 per frame.",
+	"file" : "index.html",
+	"general" : 
+	{
+		"properties" : 
+		{
+			"custombackgroundcolor" : 
+			{
+				"index" : 0,
+				"order" : 100,
+				"text" : "Bg Color",
+				"type" : "color",
+				"value" : "0 0 0"
+			},
+			"imageprovideby" : 
+			{
+				"index" : 1,
+				"order" : 101,
+				"text" : "Draw by",
+				"type" : "textinput",
+				"value" : "https://twitter.com/White_Jms"
+			},
+			"notice" : 
+			{
+				"index" : 2,
+				"order" : 102,
+				"text" : "Notice",
+				"type" : "textinput",
+				"value" : "It takes about 10 seconds to load because it animates images with a size of 15000x10000 per frame."
+			},
+			"schemecolor" : 
+			{
+				"order" : 0,
+				"text" : "ui_browse_properties_scheme_color",
+				"type" : "color",
+				"value" : "0 0 0"
+			}
+		}
+	},
+	"preview" : "preview.jpg",
+	"tags" : [ "Anime" ],
+	"title" : "Welsh Corgi the adorable doggy",
+	"type" : "Web",
+	"version" : 4,
+	"visibility" : "public",
+	"workshopid" : "2590897237",
+	"workshopurl" : "steam://url/CommunityFilePage/2590897237"
+}
