@@ -15,6 +15,8 @@
         <style type="text/css">
             html, body {background-color:#000000;}
             #image_view {position: fixed;background-color:#ffffff;background-color:#000000;/*opacity:0;*/}
+            #bottom_info_section{position:relative;position:fixed;bottom:0;left:0;right:0;color:#fafafa;}
+            #bottom_info_section > *{position:relative;display:block;color:#343434;}
         </style>
 
         <!--before script-->
@@ -25,12 +27,23 @@
         <!--draws-->
         <canvas id="image_view" width="300" height="240"></canvas>
 
+        <div id="bottom_info_section"></div>
+
         <!--after script-->
         <script type="text/javascript">
             ;(function(){
 
+                var defaultResource = {
+                    infoSection : document.getElementById("bottom_info_section"),
+                    img_spinner : new Image(),
+                    textViewOfPreparing : document.createElement("span"),
+                    textViewOfBuffering : document.createElement("span")
+                };
+
                 var globalvariables = {
-                    imageLoadCnt : 0, // will matched options.maxinumFrame when it correctly works!
+                    progressOfImageLoad : 0,
+                    progressOfBuffering : 0,
+                    imageLoadCnt : 0,           // will matched options.maxinumFrame when it correctly works!
                     frameIdx : 0,
                     backgroundColorR : "00",
                     backgroundColorG : "00",
@@ -38,18 +51,34 @@
                 }
 
                 var options = {
+                    frameStrPad : "00",
+                    colorRgbConvStrPad : "00",
+                    spinnerPath : "./res_spn.svg",
+                    frameDirectory : "cogi_anim_frame",
                     extention : ".png",
                     maximumFrame : 23,          //image frame length
                     msWaiterWaits : 1000,       //image loadout time waits
                     cdWaiterMaxinumTries : 10,  //tries image load in that count 
-                    msLatencyPerScene : 100     //frame delay
+                    msLatencyPerScene : 100,     //frame delay
+                    resourceCnt : 1
                 }
 
                 var status = {
-                    isDoneOfAllImageLoad : false, //is this images load are over done?
+                    isDoneOfAllImageLoad : false,       //is this images load are over done?
                     isDoneOfFirstRunBuffering : false
                 };
 
+
+                function resourceInit() {
+                    defaultResource.img_spinner.addEventListener("load", function() {
+                        console.log("spinner is loaded");
+                        defaultResource.infoSection.appendChild(defaultResource.img_spinner);
+                        defaultResource.infoSection.appendChild(defaultResource.textViewOfPreparing);
+                        defaultResource.infoSection.appendChild(defaultResource.textViewOfBuffering);
+                    }, false);
+                    defaultResource.img_spinner.style.width = "30px";
+                    defaultResource.img_spinner.src = options.spinnerPath;
+                };
                 
                 function backgroundChnageEvent () {
                     var html = document.getElementById("tag_html");
@@ -60,6 +89,7 @@
                     document.addEventListener("DOMContentLoaded", function () {
                         document.removeEventListener("DOMContentLoaded", arguments.callee, false); 
                         backgroundChnageEvent(); 
+                        resourceInit();
                     }, false); 
                 };
 
@@ -73,14 +103,13 @@
                                 var c = properties.custombackgroundcolor.value.split(' ').map(function(c) {
                                     return Math.ceil(c * 255)
                                 });
-                                var apad = "00";
                                 var colorArr = c.toString().split(',');
                                 var bfR = colorArr[0].toString();
                                 var bfG= colorArr[1].toString();
                                 var bfB = colorArr[2].toString();
-                                var R = apad.substring(0, apad.length - bfR.length) + bfR;
-                                var G = apad.substring(0, apad.length - bfG.length) + bfG;
-                                var B = apad.substring(0, apad.length - bfB.length) + bfB;
+                                var R = options.colorRgbConvStrPad.substring(0, options.colorRgbConvStrPad.length - bfR.length) + bfR;
+                                var G = options.colorRgbConvStrPad.substring(0, options.colorRgbConvStrPad.length - bfG.length) + bfG;
+                                var B = options.colorRgbConvStrPad.substring(0, options.colorRgbConvStrPad.length - bfB.length) + bfB;
                                 console.log(R);
                                 console.log(G);
                                 console.log(B);
@@ -113,30 +142,36 @@
                 function __f(arr, ctx) {
                     
                     var i = 0;
-                    var bpad = "00";
                     
                     //All loads on the MEMORY in one time and then wait process
                     for(i = 0; i <= options.maximumFrame; ++i){ 
-                        var imageApi = new Image();
-                        var bstr = i.toString();
-                        var bres = bpad.substring(0, bpad.length - bstr.length) + bstr;
+                        let imageApi = new Image();
+                        let bstr = i.toString();
+                        let bres = options.frameStrPad.substring(0, options.frameStrPad.length - bstr.length) + bstr;
 
                         console.log("Load it of "+ bres + " frame");
 
                         imageApi.addEventListener("load", function(){
 
-                            console.log("When it loaded of " + bres + " buff");
-
+                            //console.log("Use to ready " + imageApi.currentSrc);
+                            
+                            globalvariables.progressOfImageLoad = (globalvariables.imageLoadCnt / options.maximumFrame * 100).toFixed(1); 
                             ++globalvariables.imageLoadCnt;
+
+                            
 
                             if (globalvariables.imageLoadCnt == options.maximumFrame) {
                                 status.isDoneOfAllImageLoad = true;
                                 console.log("Image buffers are all loaded");
+                            } else {
+                                //console.log("preparing... ("+globalvariables.progressOfImageLoad+"%)");
+                                defaultResource.textViewOfPreparing.innerHTML = "preparing... ("+globalvariables.progressOfImageLoad+"%)";
                             };
+                            
 
                         }, false);
 
-                        imageApi.src = "./cogi_anim_frame/"+ bres +options.extention;
+                        imageApi.src = "./"+options.frameDirectory+"/"+ bres +options.extention;
 
                         arr.push(imageApi);
                     }
@@ -184,19 +219,26 @@
                                     console.log("drawing...");
                                     ctx.drawImage(theView.offscreenCanvas, 0, 0);
                                 } else {
-                                    console.log("loading... ("+(globalvariables.frameIdx / options.maximumFrame * 100).toFixed(1)+"%)");
+                                    globalvariables.progressOfBuffering = (globalvariables.frameIdx / options.maximumFrame * 100).toFixed(1); 
+                                    //console.log("buffering... ("+globalvariables.progressOfBuffering+"%)");
+                                    defaultResource.textViewOfBuffering.innerHTML = "buffering... ("+globalvariables.progressOfBuffering+"%)";
                                     ctx.fillStyle = "rgb("+parseInt(globalvariables.backgroundColorR)+","+parseInt(globalvariables.backgroundColorG)+","+parseInt(globalvariables.backgroundColorB)+")";
                                     ctx.clearRect(0, 0, theView.width, theView.height);
                                     ctx.fillRect(0, 0, theView.width, theView.height);
                                 };
                                 
 
-                                console.log("rgb("+parseInt(globalvariables.backgroundColorR)+","+parseInt(globalvariables.backgroundColorG)+","+parseInt(globalvariables.backgroundColorB)+")");
+                                //console.log("rgb("+parseInt(globalvariables.backgroundColorR)+","+parseInt(globalvariables.backgroundColorG)+","+parseInt(globalvariables.backgroundColorB)+")");
 
                                 if (globalvariables.frameIdx == options.maximumFrame) {
-                                    status.isDoneOfFirstRunBuffering = true;
+                                    if (!status.isDoneOfFirstRunBuffering) {
+                                        defaultResource.infoSection.removeChild(defaultResource.img_spinner);
+                                        defaultResource.infoSection.removeChild(defaultResource.textViewOfPreparing);
+                                        defaultResource.infoSection.removeChild(defaultResource.textViewOfBuffering);
+                                        status.isDoneOfFirstRunBuffering = true;
+                                    };
+                                    
                                     globalvariables.frameIdx = 0;
-                                    //theView.style.opacity = 1;
                                 };
                                     
                                 ++globalvariables.frameIdx;
